@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f1e9d5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141b28" media="(prefers-color-scheme: dark)">
+<title>横文字御法度 — カタカナ語禁止説明ゲーム</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light dark;
+  --mincho:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP","Noto Serif CJK JP",serif;
+  --gothic:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Noto Sans CJK JP",sans-serif;
+  /* 昼(和紙)の配色 */
+  --bg:#f1e9d5;
+  --bg-line:rgba(43,38,32,.035);
+  --bg-glow:rgba(250,246,236,.9);
+  --fg:#2b2620;
+  --fg-weak:#6b6154;
+  --line:rgba(43,38,32,.4);
+  --line-weak:rgba(43,38,32,.15);
+  --surface:#faf6ec;
+  --paper:#faf6ec;
+  --paper-shade:#efe6cf;
+  --paper-ink:#2b2620;
+  --paper-ink-weak:rgba(43,38,32,.62);
+  --paper-line:rgba(43,38,32,.35);
+  --wood:#4a3a2c;
+  --wood-dark:#33281e;
+  --shu:#bf3030;
+  --shu-dark:#992525;
+  --seal:#bf3030;          /* 札の上の朱(昼夜共通) */
+  --accent:#1d3a5f;
+  --chip-on-bg:#1d3a5f;
+  --chip-on-fg:#faf6ec;
+  --kincha:#a3763a;
+  --placeholder:#a99e8c;
+  --shadow:rgba(43,38,32,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#141b28;
+    --bg-line:rgba(237,229,210,.04);
+    --bg-glow:rgba(61,90,128,.3);
+    --fg:#ece4d1;
+    --fg-weak:#a4adbd;
+    --line:rgba(236,228,209,.4);
+    --line-weak:rgba(236,228,209,.15);
+    --surface:rgba(236,228,209,.07);
+    --paper:#f1e9d5;
+    --paper-shade:#e4d8bb;
+    --paper-ink:#2b2620;
+    --paper-ink-weak:rgba(43,38,32,.62);
+    --paper-line:rgba(43,38,32,.35);
+    --wood:#5a4634;
+    --wood-dark:#2a2018;
+    --shu:#d04343;
+    --shu-dark:#8f2323;
+    --accent:#9db8d8;
+    --chip-on-bg:#ece4d1;
+    --chip-on-fg:#141b28;
+    --kincha:#d0a45f;
+    --placeholder:#7e8698;
+    --shadow:rgba(0,0,0,.4);
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{background-color:var(--bg);}
+html,body{min-height:100%;}
+body{
+  font-family:var(--gothic);
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, var(--bg-glow), transparent 55%),
+    repeating-linear-gradient(0deg, transparent 0 3px, var(--bg-line) 3px 4px);
+  background-attachment:fixed;
+  color:var(--fg);
+  display:flex;align-items:center;justify-content:center;
+  min-height:100dvh;
+  padding:20px 16px calc(20px + env(safe-area-inset-bottom));
+}
+.app{width:100%;max-width:420px;}
+.screen{display:none;animation:fadein .3s ease;}
+.screen.active{display:block;}
+@keyframes fadein{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+button,label,.chip{touch-action:manipulation;}
+button:focus-visible,label:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+/* ---------- 朱印(共通) ---------- */
+.seal{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--mincho);font-weight:800;
+  color:var(--seal);
+  border:3px solid var(--seal);
+  border-radius:6px;
+  line-height:1;
+  /* かすれ */
+  -webkit-mask-image:radial-gradient(circle at 30% 70%, #000 62%, rgba(0,0,0,.82) 78%, #000 92%);
+          mask-image:radial-gradient(circle at 30% 70%, #000 62%, rgba(0,0,0,.82) 78%, #000 92%);
+}
+
+/* ---------- タイトル(縦書き) ---------- */
+.masthead{text-align:center;margin-bottom:20px;}
+.title-wrap{position:relative;display:inline-flex;justify-content:center;}
+h1.title{width:max-content;}
+h1.title{
+  writing-mode:vertical-rl;
+  font-family:var(--mincho);
+  font-weight:800;font-size:58px;line-height:1.08;
+  letter-spacing:.08em;
+  color:var(--fg);
+  margin:0 auto;
+}
+h1.title .title-col{display:block;}
+h1.title .title-col + .title-col{margin-right:6px;}
+.seal-kin{
+  position:absolute;left:-30px;bottom:6px;
+  width:50px;height:50px;font-size:30px;
+  transform:rotate(-10deg);
+  color:var(--shu);border-color:var(--shu);
+}
+.subtitle{
+  font-size:12px;color:var(--fg-weak);letter-spacing:.3em;margin-top:14px;
+}
+
+/* ---------- 高札(遊び方) ---------- */
+.kousatsu{margin:0 0 24px;filter:drop-shadow(0 6px 10px var(--shadow));}
+.kousatsu-roof{
+  position:relative;height:12px;margin:0 -10px;
+  background:linear-gradient(var(--wood), var(--wood-dark));
+  border-radius:3px 3px 1px 1px;
+}
+.kousatsu-roof::before{
+  content:"";position:absolute;left:18%;right:18%;top:-5px;height:6px;
+  background:var(--wood-dark);border-radius:3px 3px 0 0;
+}
+.kousatsu-paper{
+  background:var(--paper);
+  background-image:linear-gradient(180deg, rgba(43,38,32,.05), transparent 30%);
+  border:1px solid var(--paper-line);border-top:none;
+  box-shadow:inset 0 0 0 4px var(--paper), inset 0 0 0 5px rgba(43,38,32,.16);
+  padding:14px 20px 14px;
+  color:var(--paper-ink);
+}
+.sadame{
+  display:flex;align-items:center;gap:12px;
+  font-family:var(--mincho);font-weight:800;font-size:22px;
+  color:var(--paper-ink);margin-bottom:8px;
+}
+.sadame::before,.sadame::after{content:"";flex:1;height:1px;background:var(--paper-line);}
+.jou{list-style:none;}
+.jou li{
+  display:grid;grid-template-columns:auto 1fr;
+  font-size:13px;line-height:1.75;padding:3px 0;
+}
+.jou-n{font-family:var(--mincho);font-weight:700;color:var(--paper-ink-weak);}
+.jou .p{display:inline-block;}   /* 文節の途中で折り返さない */
+.jou .ng{color:var(--seal);font-weight:700;}
+.bugyou{
+  display:flex;justify-content:flex-end;align-items:center;gap:6px;
+  font-family:var(--mincho);font-size:12px;letter-spacing:.2em;
+  color:var(--paper-ink-weak);margin-top:8px;
+}
+.bugyou .seal{width:18px;height:18px;font-size:10px;border-width:1.5px;border-radius:2px;}
+
+/* ---------- 設定 ---------- */
+.setting{margin-bottom:16px;}
+.setting-label{
+  display:flex;align-items:center;gap:10px;
+  font-size:12px;letter-spacing:.3em;color:var(--kincha);margin-bottom:8px;font-weight:700;
+}
+.setting-label::after{content:"";flex:1;height:1px;background:var(--line-weak);}
+.chips{display:flex;gap:8px;}
+.chip{
+  flex:1;min-width:0;
+  border:1px solid var(--line);
+  background:var(--surface);color:var(--fg);
+  border-radius:4px;padding:11px 2px;
+  font-family:inherit;font-size:14px;font-weight:500;
+  cursor:pointer;transition:background .15s,border-color .15s,color .15s;
+}
+.chip.on{
+  background:var(--chip-on-bg);color:var(--chip-on-fg);border-color:var(--chip-on-bg);font-weight:700;
+}
+@media (max-width:360px){
+  .chip{font-size:12px;}
+  h1.title{font-size:50px;}
+}
+.btn{
+  display:block;width:100%;
+  font-family:var(--mincho);
+  font-weight:700;font-size:19px;letter-spacing:.4em;text-indent:.4em;
+  padding:16px;border-radius:6px;border:none;cursor:pointer;
+  transition:transform .1s, box-shadow .1s;
+}
+.btn:active{transform:translateY(2px);}
+.btn-shu{background:var(--shu);color:#fff;box-shadow:0 4px 0 var(--shu-dark);}
+.btn-shu:active{box-shadow:0 2px 0 var(--shu-dark);}
+.btn-ghost{background:transparent;color:var(--fg);border:1px solid var(--line);font-size:15px;padding:12px;}
+.btn+.btn{margin-top:12px;}
+.btn[disabled]{opacity:.6;pointer-events:none;}
+.add-msg{font-size:12px;color:var(--shu);min-height:1.2em;margin-bottom:6px;font-weight:700;}
+.start-msg{text-align:center;margin:4px 0 8px;}
+
+/* ---------- 交代画面(封書) ---------- */
+.gate{text-align:center;padding:8px 0;}
+.fuusho{
+  position:relative;
+  background:var(--paper);
+  border:1px solid var(--paper-line);
+  border-radius:4px;
+  padding:92px 22px 30px;
+  margin-bottom:26px;
+  color:var(--paper-ink);
+  box-shadow:0 8px 20px var(--shadow);
+  overflow:hidden;
+}
+.fuusho-flap{
+  position:absolute;left:0;right:0;top:0;height:74px;
+  background:var(--paper-shade);
+  clip-path:polygon(0 0,100% 0,50% 100%);
+  transform-origin:top center;
+  transition:transform .35s ease;
+}
+.fuusho-flap::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(to bottom right, transparent 49.6%, var(--paper-line) 50%, transparent 50.4%) left/50% 100% no-repeat,
+             linear-gradient(to bottom left,  transparent 49.6%, var(--paper-line) 50%, transparent 50.4%) right/50% 100% no-repeat;
+}
+.seal-fuu{
+  position:absolute;left:50%;top:50px;
+  width:48px;height:48px;font-size:28px;
+  margin-left:-24px;
+  border-radius:50%;
+  background:var(--paper);
+  transform:rotate(-8deg);
+  transition:transform .3s ease, opacity .3s ease;
+}
+.fuusho.opening .fuusho-flap{transform:scaleY(-1);}
+.fuusho.opening .seal-fuu{transform:rotate(-8deg) scale(1.6);opacity:0;}
+.round-big{
+  font-family:var(--mincho);font-weight:800;font-size:40px;letter-spacing:.2em;text-indent:.2em;
+  margin-bottom:18px;color:var(--paper-ink);
+}
+.fuusho h2{
+  font-family:var(--mincho);font-size:22px;font-weight:700;
+  line-height:1.6;margin-bottom:12px;letter-spacing:.1em;
+}
+.fuusho p{font-size:12px;color:var(--paper-ink-weak);line-height:1.9;}
+
+/* ---------- お触書カード ---------- */
+.ofuda{
+  position:relative;
+  background:var(--paper);
+  background-image:repeating-linear-gradient(90deg, transparent 0 28px, rgba(43,38,32,.045) 28px 29px);
+  color:var(--paper-ink);
+  border-radius:4px;
+  padding:34px 22px 24px;
+  border:1px solid var(--paper-line);
+  box-shadow:0 8px 20px var(--shadow), inset 0 0 0 4px var(--paper), inset 0 0 0 5px rgba(43,38,32,.2);
+  margin-bottom:16px;
+  overflow:hidden;
+}
+.ofuda.enter{animation:post .28s ease-out;}
+@keyframes post{from{opacity:0;transform:translateY(-10px) rotate(-.6deg);}to{opacity:1;transform:none;}}
+.ofuda .tate{
+  position:absolute;top:14px;right:12px;
+  writing-mode:vertical-rl;
+  font-family:var(--mincho);
+  font-size:11px;letter-spacing:.35em;
+  color:var(--paper-ink-weak);
+}
+.ofuda .kin{
+  position:absolute;top:10px;left:10px;
+  width:50px;height:50px;font-size:30px;
+  transform:rotate(-12deg);
+}
+.ofuda .odai-label{
+  text-align:center;font-size:11px;letter-spacing:.5em;text-indent:.5em;color:var(--paper-ink-weak);margin-bottom:10px;
+}
+.ofuda .odai{
+  font-family:var(--mincho);
+  font-weight:800;text-align:center;
+  font-size:40px;line-height:1.3;letter-spacing:.04em;
+  min-height:1.3em;word-break:keep-all;overflow-wrap:anywhere;
+  transition:opacity .15s;
+}
+.ofuda .odai.long{font-size:30px;}
+.ofuda .odai.xlong{font-size:22px;letter-spacing:0;}
+.ofuda .hint{
+  text-align:center;font-size:12px;color:var(--paper-ink-weak);margin-top:12px;line-height:1.7;
+}
+.rei-toggle{
+  display:block;margin:14px auto 0;
+  background:transparent;border:1px solid var(--paper-line);
+  color:var(--paper-ink-weak);border-radius:3px;
+  font-family:inherit;font-size:12px;letter-spacing:.2em;
+  padding:7px 16px;cursor:pointer;
+}
+.rei{
+  margin-top:12px;padding:12px 4px 0;
+  border-top:1px dashed var(--paper-line);
+  font-size:14px;line-height:1.8;color:var(--paper-ink);
+}
+.rei .rei-label{
+  font-size:10px;letter-spacing:.4em;color:var(--seal);margin-bottom:4px;font-weight:700;
+}
+
+/* 判子(当たり・見送り・御用) */
+.stamp{
+  position:absolute;left:50%;top:50%;
+  padding:8px 14px;
+  font-size:46px;
+  border-width:5px;
+  background:rgba(250,246,236,.55);
+  opacity:0;pointer-events:none;
+  transform:translate(-50%,-50%) rotate(-12deg) scale(1.8);
+}
+.stamp.pass{color:#6b6154;border-color:#6b6154;font-size:34px;}
+.stamp.out{border-style:double;border-width:8px;font-size:40px;}
+.stamp.show{animation:stamp .42s cubic-bezier(.2,.9,.3,1.2) forwards;}
+@keyframes stamp{
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(-12deg) scale(1.8);}
+  55%{opacity:1;transform:translate(-50%,-50%) rotate(-12deg) scale(.94);}
+  100%{opacity:1;transform:translate(-50%,-50%) rotate(-12deg) scale(1);}
+}
+.ofuda.stamped .odai,.ofuda.stamped .hint,.ofuda.stamped .rei-toggle,.ofuda.stamped .rei{opacity:.3;}
+
+/* ---------- プレイ画面 ---------- */
+.playbar{
+  display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;
+}
+.playbar .score-mini{font-size:13px;color:var(--fg-weak);letter-spacing:.1em;}
+.playbar .score-mini b{
+  display:inline-block;
+  font-family:var(--mincho);font-size:26px;color:var(--fg);margin-left:4px;
+}
+.playbar .score-mini b.bump{animation:bump .35s ease;}
+@keyframes bump{40%{transform:scale(1.35);color:var(--shu);}}
+.timer{
+  font-family:var(--mincho);
+  font-size:36px;font-weight:800;letter-spacing:.05em;
+  font-variant-numeric:tabular-nums;
+  color:var(--accent);
+}
+.timer.warn{color:var(--shu);animation:pulse 1s ease-in-out infinite;}
+@keyframes pulse{50%{transform:scale(1.08);}}
+.timerbar{
+  height:6px;background:var(--line-weak);border-radius:3px;margin-bottom:18px;overflow:hidden;
+}
+.timerbar>div{
+  height:100%;background:var(--accent);width:100%;
+  transition:width .3s linear, background-color .3s;
+}
+.timerbar.warn>div{background:var(--shu);}
+.timerbar>div.noanim{transition:none;}
+.actions{display:flex;gap:10px;align-items:stretch;}
+.actions .btn{flex:1;letter-spacing:.2em;text-indent:.2em;font-size:18px;padding:16px 8px;}
+.actions .btn+.btn{margin-top:0;}
+.btn-pass{background:var(--surface);color:var(--fg);border:1px solid var(--line);box-shadow:0 4px 0 var(--line-weak);}
+.btn-out{
+  background:transparent;color:var(--shu);border:1px solid var(--shu);box-shadow:none;
+  font-size:14px!important;letter-spacing:.15em;margin-top:12px;padding:12px;
+}
+.btn-finish{margin-top:10px;font-size:13px!important;padding:10px!important;border-color:var(--line-weak)!important;color:var(--fg-weak)!important;}
+
+/* ---------- 結果 ---------- */
+.result-head{text-align:center;margin-bottom:18px;}
+.result-head .round-tag{
+  font-family:var(--mincho);font-size:15px;letter-spacing:.35em;text-indent:.35em;
+  color:var(--shu);margin-bottom:12px;font-weight:700;
+}
+.result-score{
+  position:relative;display:inline-flex;align-items:baseline;justify-content:center;
+  width:136px;height:136px;padding-top:26px;
+  font-family:var(--mincho);font-weight:800;font-size:66px;line-height:1;color:var(--fg);
+}
+.result-score::before{
+  content:"";position:absolute;inset:0;
+  border:3px solid var(--shu);
+  border-left-width:5px;border-bottom-width:4px;
+  border-radius:50% 48% 52% 50%;
+  transform:rotate(-14deg);
+  opacity:.85;
+}
+.result-score small{font-size:18px;font-weight:700;margin-left:4px;}
+.rank{
+  display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;
+}
+.rank-label{font-size:11px;letter-spacing:.4em;color:var(--fg-weak);}
+.rank .seal{
+  font-size:20px;padding:6px 12px;letter-spacing:.1em;
+  color:var(--shu);border-color:var(--shu);
+  transform:rotate(-4deg);
+}
+.rank .seal.show{animation:stamp-sm .45s .15s cubic-bezier(.2,.9,.3,1.2) both;}
+@keyframes stamp-sm{
+  0%{opacity:0;transform:rotate(-4deg) scale(1.9);}
+  60%{opacity:1;transform:rotate(-4deg) scale(.95);}
+  100%{opacity:1;transform:rotate(-4deg) scale(1);}
+}
+.tally{
+  display:flex;justify-content:center;gap:14px;flex-wrap:wrap;
+  font-size:12px;color:var(--fg-weak);margin-top:14px;letter-spacing:.05em;
+}
+.tally b{font-family:var(--mincho);font-size:16px;color:var(--fg);margin-left:3px;}
+.result-list{
+  border-top:1px solid var(--line);
+  margin-bottom:22px;max-height:34dvh;overflow-y:auto;
+}
+.result-list .row{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:9px 4px;border-bottom:1px solid var(--line-weak);
+  font-size:15px;color:var(--fg);
+}
+.row-word{min-width:0;overflow-wrap:anywhere;}
+.row-marks{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.rei-tag{font-size:11px;letter-spacing:.05em;white-space:nowrap;min-width:6.6em;text-align:right;}
+.row-marks .mark{min-width:4.4em;text-align:center;}
+.rei-tag.seen{color:var(--accent);font-weight:700;}
+.rei-tag.seen::before{content:"◉ ";}
+.rei-tag.unseen{color:var(--fg-weak);opacity:.55;}
+.mark{
+  flex-shrink:0;
+  font-family:var(--mincho);font-size:12px;font-weight:700;letter-spacing:.1em;
+  padding:3px 7px;border-radius:3px;border:1.5px solid currentColor;
+}
+.mark.ok{color:var(--kincha);}
+.mark.pass{color:var(--fg-weak);border-style:dashed;}
+.mark.out{color:#fff;background:var(--shu);border-color:var(--shu);}
+
+/* ---------- 問題集一覧 ---------- */
+.eyebrow{
+  text-align:center;letter-spacing:.5em;font-size:12px;
+  color:var(--shu);margin-bottom:8px;font-weight:700;
+}
+.list-title{
+  font-family:var(--mincho);font-size:28px;font-weight:800;
+  text-align:center;letter-spacing:.2em;text-indent:.2em;margin-bottom:18px;color:var(--fg);
+}
+.list-count{font-size:12px;color:var(--fg-weak);margin:-4px 0 8px;text-align:right;}
+.word-list{
+  border:1px solid var(--paper-line);border-radius:4px;
+  max-height:40dvh;overflow-y:auto;margin-bottom:22px;
+  background:var(--paper);
+  box-shadow:0 6px 16px var(--shadow);
+}
+.word-list .wrow{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 12px;border-bottom:1px solid rgba(43,38,32,.12);
+}
+.word-list .wrow:last-child{border-bottom:none;}
+.word-list .wbody{flex:1;min-width:0;}
+.word-list .wname{font-family:var(--mincho);font-size:16px;font-weight:700;color:var(--paper-ink);}
+.word-list .wrei{font-size:12px;color:var(--paper-ink-weak);line-height:1.6;margin-top:2px;}
+.word-list .wdel{
+  flex-shrink:0;background:transparent;border:1px solid rgba(191,48,48,.55);
+  color:#bf3030;border-radius:3px;font-family:inherit;font-size:11px;
+  padding:5px 9px;cursor:pointer;margin-top:2px;
+}
+.add-form input{
+  display:block;width:100%;margin-bottom:8px;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:4px;color:var(--fg);font-family:inherit;font-size:16px;
+  padding:11px 12px;
+}
+.add-form input::placeholder{color:var(--placeholder);}
+.btn-add{font-size:15px!important;letter-spacing:.3em!important;padding:12px!important;}
+.io-row{display:flex;gap:10px;margin-top:18px;}
+.io-row button,.io-row label{
+  flex:1;text-align:center;background:var(--surface);
+  border:1px solid var(--kincha);color:var(--kincha);
+  border-radius:4px;font-family:inherit;font-size:13px;font-weight:700;
+  padding:11px 4px;cursor:pointer;
+}
+.io-note{font-size:11px;color:var(--fg-weak);line-height:1.7;margin:10px 0 14px;}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important;}
+  .stamp.show,.rank .seal.show{opacity:1;transform:translate(-50%,-50%) rotate(-12deg);}
+  .rank .seal.show{transform:rotate(-4deg);}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ホーム -->
+  <section class="screen active" id="scr-home">
+    <header class="masthead">
+      <div class="title-wrap">
+        <h1 class="title"><span class="title-col">横文字</span><span class="title-col">御法度</span></h1>
+        <div class="seal seal-kin" aria-hidden="true">禁</div>
+      </div>
+      <p class="subtitle">カタカナ語・英語 禁止の説明遊戯</p>
+    </header>
+
+    <div class="kousatsu">
+      <div class="kousatsu-roof" aria-hidden="true"></div>
+      <div class="kousatsu-paper">
+        <div class="sadame">定</div>
+        <ol class="jou">
+          <li><span class="jou-n">一、</span><span><span class="p">説明役はひとり。</span><span class="p">お題を確かめ、</span><span class="p">仲間に言葉で伝えるべし</span></span></li>
+          <li><span class="jou-n">二、</span><span><span class="p ng">英語・カタカナ語は</span><span class="p ng">一切御法度。</span><span class="p">お題の言葉も然り</span></span></li>
+          <li><span class="jou-n">三、</span><span><span class="p">口にした者は「御用」となり、</span><span class="p">その題は失格とす</span></span></li>
+          <li><span class="jou-n">四、</span><span><span class="p">当てたら一点。</span><span class="p">時が尽きるまで続けるべし</span></span></li>
+        </ol>
+        <div class="bugyou">横文字奉行<span class="seal" aria-hidden="true">印</span></div>
+      </div>
+    </div>
+
+    <div class="setting">
+      <div class="setting-label">お題の種類</div>
+      <div class="chips" id="genre-chips">
+        <button class="chip on" data-genre="business">仕事の言葉</button>
+        <button class="chip" data-genre="it">情報の言葉</button>
+        <button class="chip" data-genre="daily">日々の言葉</button>
+        <button class="chip" data-genre="mix">ごちゃまぜ</button>
+      </div>
+    </div>
+
+    <div class="setting">
+      <div class="setting-label">持ち時間</div>
+      <div class="chips" id="time-chips">
+        <button class="chip on" data-time="60">60秒</button>
+        <button class="chip" data-time="120">120秒</button>
+        <button class="chip" data-time="180">180秒</button>
+        <button class="chip" data-time="0">なし</button>
+      </div>
+    </div>
+
+    <div class="add-msg start-msg" id="start-msg"></div>
+    <button class="btn btn-shu" id="btn-start">開始</button>
+    <button class="btn btn-ghost" id="btn-list">問題集を検める</button>
+  </section>
+
+  <!-- 問題集一覧 -->
+  <section class="screen" id="scr-list">
+    <div class="eyebrow">問題集</div>
+    <h2 class="list-title">お題一覧</h2>
+
+    <div class="setting">
+      <div class="chips" id="list-chips">
+        <button class="chip on" data-lg="business">仕事</button>
+        <button class="chip" data-lg="it">情報</button>
+        <button class="chip" data-lg="daily">日々</button>
+      </div>
+    </div>
+    <div class="list-count" id="list-count"></div>
+    <div class="word-list" id="word-list"></div>
+
+    <div class="add-form">
+      <div class="setting-label">お題を書き足す</div>
+      <input type="text" id="add-word" placeholder="お題(例:アジェンダ)" maxlength="20">
+      <input type="text" id="add-rei" placeholder="説明の手本(横文字は使わない)" maxlength="60">
+      <div class="add-msg" id="add-msg"></div>
+      <button class="btn btn-shu btn-add" id="btn-add">書き足す</button>
+    </div>
+
+    <div class="io-row">
+      <button id="btn-export">帳面に書き出す</button>
+      <label for="file-import" id="lbl-import">帳面を読み込む</label>
+      <input type="file" id="file-import" accept=".json,application/json" hidden>
+    </div>
+    <p class="io-note">書き足したお題はこの場限り。残したいときは帳面(書類)に書き出し、次に読み込むべし。</p>
+
+    <button class="btn btn-ghost" id="btn-list-back">戻る</button>
+  </section>
+
+  <!-- 交代(封書) -->
+  <section class="screen" id="scr-gate">
+    <div class="gate">
+      <div class="fuusho" id="fuusho">
+        <div class="fuusho-flap" aria-hidden="true"></div>
+        <div class="seal seal-fuu" aria-hidden="true">封</div>
+        <div class="round-big" id="gate-round">第一幕</div>
+        <h2>説明役に<br>この端末を渡すべし</h2>
+        <p>説明役のみ、次の画面でお題を見ることを許す。<br>他の者は目を伏せられたし。</p>
+      </div>
+      <button class="btn btn-shu" id="btn-reveal">封を切る</button>
+      <button class="btn btn-ghost" id="btn-quit">やめて戻る</button>
+    </div>
+  </section>
+
+  <!-- プレイ -->
+  <section class="screen" id="scr-play">
+    <div class="playbar">
+      <div class="score-mini">正解<b id="play-score">0</b></div>
+      <div class="timer" id="timer-num">60</div>
+    </div>
+    <div class="timerbar" id="timerbar"><div id="timer-fill"></div></div>
+
+    <div class="ofuda" id="ofuda">
+      <div class="seal kin" aria-hidden="true">禁</div>
+      <div class="tate">横文字御法度</div>
+      <div class="odai-label">お題</div>
+      <div class="odai" id="odai-text">─</div>
+      <div class="hint" id="odai-hint"></div>
+      <button class="rei-toggle" id="btn-rei">手本を見る</button>
+      <div class="rei" id="odai-rei" hidden></div>
+      <div class="seal stamp" id="stamp" aria-hidden="true"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-pass" id="btn-pass">見送る</button>
+      <button class="btn btn-shu" id="btn-ok">当たり</button>
+    </div>
+    <button class="btn btn-out" id="btn-out">横文字を口にした(御用)</button>
+    <button class="btn btn-ghost btn-finish" id="btn-finish">この幕を終える</button>
+  </section>
+
+  <!-- 結果 -->
+  <section class="screen" id="scr-result">
+    <div class="result-head">
+      <div class="round-tag" id="result-round">第一幕 仕舞</div>
+      <div class="result-score"><span id="result-score">0</span><small>点</small></div>
+      <div class="rank"><span class="rank-label">称号</span><span class="seal" id="result-rank">見習い</span></div>
+      <div class="tally" id="result-tally"></div>
+    </div>
+    <div class="result-list" id="result-list"></div>
+    <button class="btn btn-shu" id="btn-next-round">次の説明役へ</button>
+    <button class="btn btn-ghost" id="btn-home">最初に戻る</button>
+  </section>
+
+</div>
+
+<script>
+/* ================= お題データ ================= */
+/* 各お題は [言葉, 手本となる説明] の組。手本にも横文字は使わない */
+const WORDS = {
+  business: [
+    ["アジェンダ","会議で話し合う事柄を並べた一覧のこと"],
+    ["エビデンス","主張の裏付けとなる証拠や記録のこと"],
+    ["コンセンサス","関わる皆の合意が取れている状態のこと"],
+    ["リスケジュール","決めていた予定を組み直すこと"],
+    ["ペンディング","結論を出さずに保留にしておくこと"],
+    ["フィックス","内容を確定させて、もう動かさないこと"],
+    ["アサイン","人に仕事や役割を割り当てること"],
+    ["ジョイン","集まりや組織に新しく加わること"],
+    ["コミット","成果を約束し、責任を持って取り組むこと"],
+    ["サマリー","長い内容を短くまとめた要約のこと"],
+    ["ナレッジ","仕事で蓄えた知識や知見のこと"],
+    ["スキーム","事を進めるための仕組みや枠組みのこと"],
+    ["バジェット","使える金額の枠、つまり予算のこと"],
+    ["ボトルネック","全体の流れを詰まらせている箇所のこと"],
+    ["シナジー","組み合わせることで生まれる相乗効果のこと"],
+    ["イニシアチブ","自ら先頭に立って導く主導権のこと"],
+    ["オンボーディング","新しく入った人が馴染むよう教え導くこと"],
+    ["ブレインストーミング","良し悪しを言わず皆で案を出し合う会のこと"],
+    ["タスク","こなすべき一つひとつの作業のこと"],
+    ["リソース","人手や金銭など、使える資源のこと"],
+    ["マイルストーン","途中に置く節目の目標のこと"],
+    ["ステークホルダー","その事業に利害を持つ関係者のこと"],
+    ["ガバナンス","組織を正しく治める統治の仕組みのこと"],
+    ["コンプライアンス","法令や決まりを守ること"],
+    ["フィードバック","結果に対する意見や指摘を本人に返すこと"],
+    ["プライオリティ","どれを先にやるかの優先順位のこと"],
+    ["デッドライン","守らねばならない締め切りのこと"],
+    ["ローンチ","新しい商品や事業を世に送り出すこと"],
+    ["リリース","作った物を世の中に公開すること"],
+    ["キックオフ","物事の始まりに開く顔合わせの会のこと"],
+    ["クロージング","商談の締めくくり、契約を結ぶ最後の段階のこと"],
+    ["ネゴシエーション","条件を巡って相手と話し合う交渉のこと"],
+    ["リテラシー","情報を読み解き使いこなす力のこと"],
+    ["ソリューション","課題を解くための解決策のこと"],
+    ["イノベーション","世の中を変えるような技術革新のこと"],
+    ["ベンチマーク","比べるときの物差しとなる基準のこと"],
+    ["フィジビリティ","実現できるかどうかの見込みのこと"],
+    ["アライアンス","会社同士が手を組む提携のこと"],
+    ["アウトソーシング","仕事を外の会社に任せる外部委託のこと"],
+    ["リストラクチャリング","事業の立て直し。人減らしの意味でも使われる"],
+    ["モチベーション","物事に取り組むやる気のこと"],
+    ["インセンティブ","意欲を高めるために与える報奨のこと"],
+    ["キャリアパス","昇進や成長の道筋のこと"],
+    ["ジョブローテーション","色々な部署を順に回る配置換えのこと"],
+    ["ワークライフバランス","仕事と暮らしの釣り合いのこと"],
+    ["テレワーク","会社に出ず、離れた場所で働くこと"],
+    ["ダイバーシティ","様々な人がいることを尊ぶ、多様性のこと"],
+    ["サステナビリティ","将来まで続けられること、持続可能性のこと"],
+    ["ハラスメント","立場を利用した嫌がらせのこと"],
+    ["エスカレーション","自分で裁けない件を上の者へ引き継ぐこと"],
+    ["リマインド","忘れないよう念押しの知らせを送ること"],
+    ["シェア","分かち合うこと。市場の占有率の意味でも使う"],
+    ["マター","「誰々の担当案件」という意味で使う言葉"],
+    ["バッファ","予定や量に持たせる余裕のこと"],
+    ["ローンチカスタマー","新しい商品を真っ先に採用してくれる顧客のこと"],
+    ["コアコンピタンス","他社に真似できない、その会社の中核の強みのこと"],
+    ["レガシー","昔から残る遺産。古びた仕組みを指すことも"],
+    ["ローテーション","順繰りに役目を交代すること"],
+    ["デフォルト","初めから決まっている設定のこと。借金の不履行の意味も"],
+    ["オルタナティブ","本命の代わりとなる、別の選択肢のこと"],
+    ["アポイントメント","会う約束を取り付けること"],
+    ["プレゼンテーション","大勢の前で企画などを発表すること"],
+    ["ミーティング","打ち合わせの集まりのこと"],
+    ["スケジュール","予定の組み立てのこと"],
+    ["プロジェクト","目標に向けて進める企ての一まとまりのこと"],
+    ["マネジメント","人や仕事を取りまとめる管理のこと"],
+    ["リーダーシップ","集団を導く統率力のこと"],
+    ["チームワーク","仲間同士の連携のこと"],
+    ["コミュニケーション","互いの意思の疎通のこと"],
+    ["ヒアリング","相手から事情を聞き取ること"],
+    ["クレーム","客からの苦情のこと"],
+    ["コスト","かかる費用のこと"],
+    ["プロフィット","商いで得る儲け、利益のこと"],
+    ["マーケティング","売れる仕組みを作るための活動のこと"],
+    ["ターゲット","狙いを定める相手の層のこと"],
+    ["ニーズ","客が求めているもののこと"],
+    ["プロモーション","売り込みのための宣伝活動のこと"],
+    ["ブランディング","銘柄の値打ちを高める取り組みのこと"],
+    ["キャンペーン","期間を区切って行う宣伝の催しのこと"],
+    ["アンケート","大勢に同じ問いを尋ねる調査のこと"],
+    ["データ","集めた情報や数値のこと"],
+    ["レポート","調べた事をまとめた報告書のこと"],
+    ["ドラフト","仕上げる前の下書きのこと"],
+    ["テンプレート","繰り返し使えるひな形のこと"],
+    ["フォーマット","決められた書式のこと"],
+    ["マニュアル","仕事の手順書のこと"],
+    ["ルーティン","毎回決まって行う仕事のこと"],
+    ["ノルマ","果たすべきと課された仕事量のこと"],
+    ["スキル","身につけた技能のこと"],
+    ["キャリア","積み重ねてきた職歴のこと"],
+    ["リクルート","人を雇い入れる採用活動のこと"],
+    ["インターンシップ","学生が試しに働く職場体験のこと"],
+    ["ヘッドハンティング","よその会社の優れた人材を引き抜くこと"],
+    ["ポテンシャル","まだ表に出ていない潜在の力のこと"],
+    ["パフォーマンス","発揮される成果や働きぶりのこと"],
+    ["アウトプット","外へ出す成果物のこと"],
+    ["インプット","知識などを自分の中へ取り込むこと"],
+    ["ロジカルシンキング","筋道を立てて考えること"],
+    ["クリティカルシンキング","鵜呑みにせず疑いの目で吟味する考え方のこと"],
+    ["フレームワーク","考えを整理するための枠組みのこと"],
+    ["ケーススタディ","実際の事例をもとにした学びのこと"],
+    ["ロールプレイング","役を演じ合って行う練習のこと"],
+    ["シミュレーション","本番を想定して行う模擬の実験のこと"],
+    ["プランニング","計画を立てること"],
+    ["オペレーション","日々の業務の運用のこと"],
+    ["ワークフロー","仕事が流れる手順の道筋のこと"],
+    ["プロセス","物事が進む過程のこと"],
+    ["ブラッシュアップ","磨きをかけて出来を良くすること"],
+    ["フォローアップ","その後の面倒を見て支えること"],
+    ["キャッチアップ","遅れを取り戻して追いつくこと"],
+    ["コミットメント","責任を伴う固い約束のこと"],
+    ["アカウンタビリティ","説明する責任のこと"],
+    ["トレーサビリティ","生産や流通の履歴を追える仕組みのこと"],
+    ["リスクマネジメント","危険への備えと管理のこと"],
+    ["リスクヘッジ","危険を避けるための備えをすること"],
+    ["コンティンジェンシープラン","不測の事態に備えて用意しておく計画のこと"],
+    ["ガイドライン","従うべき指針のこと"],
+    ["レギュレーション","規則や規制のこと"],
+    ["オーソライズ","正式な承認を得ること"],
+    ["ジャッジ","良し悪しの判断を下すこと"],
+    ["ディシジョン","進む道を決める意思決定のこと"],
+    ["ミッション","果たすべき使命のこと"],
+    ["ビジョン","目指す将来の姿のこと"],
+    ["バリュー","組織が大切にする価値観のこと"],
+    ["ストラテジー","大局を見据えた戦略のこと"],
+    ["タクティクス","目先の勝負に勝つための戦術のこと"],
+    ["ポジショニング","市場での立ち位置の取り方のこと"],
+    ["セグメント","客層などを区分けしたひとかたまりのこと"],
+    ["シェアホルダー","株を持つ株主のこと"],
+    ["ディスクロージャー","会社の情報を開示すること"],
+    ["デューデリジェンス","買収の前に行う徹底した調査のこと"],
+    ["バイアウト","会社を丸ごと買い取ること"],
+    ["ベンチャー","新しい事業に挑む冒険的な会社のこと"],
+    ["スタートアップ","立ち上げたばかりで急成長を狙う会社のこと"],
+    ["ユニコーン","値打ちが極めて高い未上場の若い会社。伝説の一角獣から"],
+    ["エンジェル投資家","生まれたての会社に自腹で金を出す個人の出資者のこと"],
+    ["ピッチ","短い時間で行う売り込みの発表のこと"],
+    ["プレスリリース","報道機関へ向けて出す発表文のこと"],
+    ["メディア","報道や伝達を担う媒体のこと"],
+    ["パブリシティ","報道に取り上げられて得られる宣伝効果のこと"],
+    ["スポンサー","金を出して後押しする後援者のこと"],
+    ["タイアップ","他社と手を組んで行う共同の宣伝のこと"],
+    ["コラボレーション","力を合わせて行う共同制作のこと"],
+    ["パートナーシップ","対等な立場で結ぶ協力関係のこと"],
+    ["サプライチェーン","原料から客に届くまでの供給の連なりのこと"],
+    ["ロジスティクス","物の流れを担う物流のこと"],
+    ["インフラ","社会や事業の土台となる基盤のこと"],
+    ["キャパシティ","受け入れられる量や能力の上限のこと"],
+    ["オーバーワーク","働きすぎのこと"],
+    ["バーンアウト","頑張りすぎて燃え尽き、気力を失うこと"],
+    ["メンタルヘルス","心の健康のこと"],
+    ["ウェルビーイング","心も体も満たされた良い状態のこと"],
+    ["エンゲージメント","会社への愛着と貢献したい気持ちのこと"],
+    ["ロイヤリティ","忠誠心のこと。権利の使用料の意味もある"],
+    ["カスタマー","品物や役務を買う客のこと"],
+    ["クライアント","仕事の依頼主のこと"],
+    ["エンドユーザー","実際に使う最終の利用者のこと"],
+    ["サービス","役務の提供のこと。無償のおまけの意味でも使う"],
+    ["クオリティ","品物や仕事の質のこと"],
+    ["スペック","性能や仕様のこと"],
+    ["プロトタイプ","本番前に作る試作品のこと"],
+    ["サンプル","見本のこと"],
+    ["トライアル","本採用の前のお試しのこと"],
+    ["デモンストレーション","実際にやって見せる実演のこと"],
+    ["レビュー","出来栄えを見直して評すること"],
+    ["モニタリング","継続して様子を見張ること"],
+    ["メンテナンス","壊れないよう手入れする保守点検のこと"],
+    ["サポート","困りごとを助ける支援のこと"],
+    ["ヘルプデスク","困りごとの問い合わせを受ける窓口のこと"],
+    ["コールセンター","電話での応対を専門に行う部署のこと"],
+    ["マージン","売り買いの間で得る利ざやのこと"],
+    ["コミッション","仲介で受け取る手数料のこと"],
+    ["ペナルティ","約束を破ったときの罰則のこと"],
+    ["ボーナス","給料とは別に出る賞与のこと"],
+    ["ベースアップ","基本給を引き上げること"],
+    ["フレックスタイム","出退勤の時刻を自分で選べる働き方のこと"],
+    ["シフト","交代制の勤務の割り振りのこと"],
+    ["マネージャー","部下を束ねる管理職のこと"],
+    ["スーパーバイザー","現場を見て回る監督役のこと"],
+    ["コンサルタント","助言を生業とする専門家のこと"]
+  ],
+  it: [
+    ["クラウド","手元ではなく通信網の先の計算機に情報を預ける仕組み"],
+    ["サーバー","求めに応じて情報を返す側の計算機のこと"],
+    ["ダウンロード","通信網から手元の機械へ情報を写し取ること"],
+    ["アップデート","仕組みを最新の状態に更新すること"],
+    ["インストール","新しい道具となる仕組みを計算機へ組み込むこと"],
+    ["ログイン","名を名乗り、合い言葉を入れて中へ入ること"],
+    ["パスワード","本人だけが知る合い言葉のこと"],
+    ["ブラウザ","通信網の頁を見るための道具のこと"],
+    ["アプリケーション","電話機などに入れて使う、目的ごとの道具のこと"],
+    ["データベース","大量の情報を整理して蓄えておく仕組みのこと"],
+    ["アルゴリズム","答えを出すための計算の手順のこと"],
+    ["プログラミング","計算機への命令書きを作ること"],
+    ["バグ","仕組みに潜む不具合のこと。虫という意味の言葉"],
+    ["デバッグ","不具合を探し出して直すこと"],
+    ["フリーズ","画面が固まって動かなくなること"],
+    ["バックアップ","万一に備えて取っておく控えの複製のこと"],
+    ["セキュリティ","情報や機械の安全を守る仕組みのこと"],
+    ["ウイルス","計算機に入り込んで悪さをする仕組み。病原体の名から"],
+    ["スパム","勝手に大量に送りつけられる迷惑な知らせのこと"],
+    ["フィッシング","偽の頁へ誘い、合い言葉を釣り取る詐欺のこと"],
+    ["ストリーミング","写し取らず、流しながら見聞きする方式のこと"],
+    ["サブスクリプション","月々の定額で使い続ける契約のこと"],
+    ["オンライン","通信網につながっている状態のこと"],
+    ["オフライン","通信網から切り離されている状態のこと"],
+    ["リモート","離れた場所から機械や仕事を操ること"],
+    ["スクリーンショット","画面をそのまま写し取った絵のこと"],
+    ["コピーアンドペースト","文章を写し取り、別の場所へ貼り付けること"],
+    ["ショートカット","手数を減らす近道の操作のこと"],
+    ["フォルダ","書類をまとめて入れておく入れ物のこと"],
+    ["ファイル","計算機の中の一つひとつの書類のこと"],
+    ["ネットワーク","計算機同士をつなぐ網のこと"],
+    ["ワイファイ","線を使わずに通信網へつなぐ仕組みのこと"],
+    ["ブルートゥース","近くの機器同士を線なしでつなぐ仕組みのこと"],
+    ["タッチパネル","指で触れて操る画面のこと"],
+    ["スマートフォン","賢い携帯電話のこと"],
+    ["タブレット","板の形をした薄い計算機のこと"],
+    ["キーボード","文字を打ち込むための板のこと"],
+    ["マウス","手で滑らせて画面の矢印を操る道具。小さな動物の名"],
+    ["モニター","計算機の中身を映し出す画面のこと"],
+    ["プリンター","紙に文字や絵を刷り出す機械のこと"],
+    ["人工知能","人の知恵の働きを計算機で真似る仕組みのこと"],
+    ["バーチャルリアリティ","作り物の世界に本当にいるかのように感じさせる技術"],
+    ["メタバース","通信網の中に築かれた、もう一つの仮想の世界のこと"],
+    ["ブロックチェーン","取引の記録を鎖のようにつなぎ、改ざんを防ぐ仕組み"],
+    ["ビッグデータ","並外れて巨大な量の情報の集まりのこと"],
+    ["アカウント","使う人ごとに設けられる登録の枠のこと"],
+    ["アイコン","絵で表した小さな目印のこと"],
+    ["カーソル","画面の上で今の位置を示す印のこと"],
+    ["クリック","押して選ぶ操作のこと"],
+    ["ダブルクリック","続けて二度押す操作のこと"],
+    ["ドラッグ","押さえたまま引きずって動かす操作のこと"],
+    ["スクロール","画面を上下に送る操作のこと"],
+    ["スワイプ","画面の上で指を滑らせる操作のこと"],
+    ["タップ","画面を指で軽く叩く操作のこと"],
+    ["ズーム","表示を拡大したり縮小したりすること"],
+    ["ピクセル","画面を成す一番小さな点のこと"],
+    ["フォント","文字の書体のこと"],
+    ["レイヤー","絵や情報を重ねた層のこと"],
+    ["リンク","押すと別の頁へ飛ぶつながりのこと"],
+    ["ホームページ","会社や個人が通信網の上に構える頁のこと"],
+    ["ブックマーク","また見たい頁に挟む、しおりのような登録のこと"],
+    ["キャッシュ","表示を速めるために取っておく一時の蓄えのこと"],
+    ["クッキー","頁が訪問者の情報を覚えておく小さな仕組み。菓子の名前から"],
+    ["ポップアップ","画面に飛び出して現れる小さな窓のこと"],
+    ["バナー","頁に貼られる旗のような広告のこと"],
+    ["サムネイル","中身を示す小さな見本の絵のこと"],
+    ["アップロード","手元から通信網の先へ情報を送り上げること"],
+    ["インターネット","世界中の計算機をつなぐ巨大な網のこと"],
+    ["プロバイダ","通信網への接続を売る業者のこと"],
+    ["ルーター","通信の行き先を振り分ける機械のこと"],
+    ["ケーブル","機器同士をつなぐ線のこと"],
+    ["バッテリー","電気を蓄える電池のこと"],
+    ["チャージ","電気を蓄えること。金を積み増す意味でも使う"],
+    ["メモリ","作業中の情報を一時的に覚えておく記憶装置のこと"],
+    ["ストレージ","情報をしまっておく保管場所のこと"],
+    ["ハードディスク","回る円盤に情報を貯める装置のこと"],
+    ["スピーカー","音を出す装置のこと"],
+    ["マイク","声や音を拾う装置のこと"],
+    ["カメラ","写真や動く絵を撮る機械のこと"],
+    ["イヤホン","耳に差し込んで音を聞く道具のこと"],
+    ["チャット","文字での即時のやり取りのこと"],
+    ["メール","電子の手紙のこと"],
+    ["メッセージ","送り合う言伝のこと"],
+    ["スタンプ","やり取りで送る絵の判子のこと"],
+    ["フォロー","相手の発信を追いかける登録をすること"],
+    ["フォロワー","自分の発信を追いかけてくれる人のこと"],
+    ["タイムライン","投稿が時の順に流れて並ぶ場所のこと"],
+    ["ハッシュタグ","投稿に付ける検索用の札のこと"],
+    ["バズる","投稿が爆発的に広まること"],
+    ["インフルエンサー","発信で世間に大きな影響を与える人のこと"],
+    ["ライブ配信","その場の様子を通信網で生中継すること"],
+    ["アーカイブ","過去のものを保存しておく書庫のこと"],
+    ["ブログ","通信網の上に綴る日記や記事のこと"],
+    ["コメント","投稿に書き込む感想のこと"],
+    ["ミュート","音や知らせを出ないようにすること"],
+    ["ブロック","相手からの接触を遮断すること"],
+    ["ログアウト","名乗りを解いて外へ出ること"],
+    ["インターフェース","人と機械が触れ合う接点の部分のこと"],
+    ["ユーザビリティ","使い勝手の良さのこと"],
+    ["アクセシビリティ","誰にでも使いやすくするための配慮のこと"],
+    ["コード","計算機への命令を書き記した文のこと"],
+    ["オープンソース","命令書きを誰でも見て使えるよう公開する方式のこと"],
+    ["ライセンス","使ってよいという許諾のこと"],
+    ["セットアップ","使い始めの準備を整えること"],
+    ["リセット","初めの状態に戻すこと"],
+    ["リブート","機械を立ち上げ直すこと"],
+    ["シャットダウン","機械の電源を落として終えること"],
+    ["スリープ","機械を眠らせて待機させること"],
+    ["ウィンドウ","画面に開く四角い窓のこと"],
+    ["デスクトップ","画面のうち、机の上にあたる場所のこと"],
+    ["ウィジェット","画面に置いておく小さな道具のこと"],
+    ["ノートパソコン","持ち運べる折りたたみ式の計算機のこと"],
+    ["パソコン","個人が使う計算機のこと"],
+    ["バーコード","太さの違う縞模様で情報を表す印のこと"],
+    ["スキャン","機械で読み取ること"],
+    ["ダークモード","画面を黒基調の配色に切り替える設定のこと"],
+    ["ラグ","通信や表示の遅れのこと"],
+    ["フリック","指で弾いて文字を入れる操作のこと"],
+    ["プッシュ通知","機械の側から自動で届く知らせのこと"],
+    ["パケット","小分けにして送る通信の包みのこと"],
+    ["ドメイン","通信網の上の住所にあたる名前のこと"],
+    ["サイバー攻撃","通信網を通じて仕掛けられる攻撃のこと"],
+    ["ハッカー","計算機の腕に長けた者のこと。侵入者の意味で使われがち"],
+    ["ランサムウェア","情報を人質に取り、金銭を要求する悪しき仕組みのこと"],
+    ["ファイアウォール","外からの侵入を防ぐ、火の壁と呼ばれる仕組みのこと"],
+    ["チャットボット","人の代わりに文字で自動応答する仕組みのこと"],
+    ["ディープラーニング","計算機が大量の情報から自ら学ぶ手法のこと"],
+    ["ドローン","無人で空を飛ぶ小型の機体のこと"],
+    ["センサー","光や熱などを感じ取る装置のこと"],
+    ["テザリング","電話機を経由して他の機器を通信網につなぐこと"],
+    ["ペアリング","機器同士を線なしでつなぐ登録をすること"],
+    ["ベータ版","正式な公開の前に試しで出す版のこと"],
+    ["デバイス","機器のこと"],
+    ["ガジェット","目新しくて面白い小物の機械のこと"],
+    ["スマートウォッチ","賢い腕時計のこと"]
+  ],
+  daily: [
+    ["コストパフォーマンス","払った費用に対する見返りの良さのこと"],
+    ["サプライズ","祝い事などで仕掛ける、不意打ちの驚きのこと"],
+    ["リラックス","肩の力を抜いてくつろぐこと"],
+    ["ストレス","心や体にかかる負担のこと"],
+    ["エチケット","人前での礼儀作法のこと"],
+    ["マナー","守るべき行儀や作法のこと"],
+    ["ボリューム","量の多さのこと。音の大きさの意味でも使う"],
+    ["カロリー","食べ物の持つ熱量のこと"],
+    ["ダイエット","痩せるために食事や運動に励むこと"],
+    ["トレーニング","体や技を鍛える鍛錬のこと"],
+    ["ジョギング","健康のためにゆっくり走る運動のこと"],
+    ["ストレッチ","筋を伸ばす体操のこと"],
+    ["リフレッシュ","気分を一新して英気を養うこと"],
+    ["バカンス","長く取る休暇のこと"],
+    ["レジャー","余暇に楽しむ遊びのこと"],
+    ["イベント","人を集めて開く催し物のこと"],
+    ["フェスティバル","大勢で楽しむ祭りのこと"],
+    ["パレード","飾り立てて練り歩く行進のこと"],
+    ["イルミネーション","街や木々を彩る電飾のこと"],
+    ["カウントダウン","残りの数を大きい方から数え下げること"],
+    ["テイクアウト","店の料理を持ち帰ること"],
+    ["デリバリー","料理などを家まで届ける出前のこと"],
+    ["バイキング","好きな料理を好きなだけ取って食べる形式のこと"],
+    ["ランチ","昼の食事のこと"],
+    ["ディナー","夜の食事のこと"],
+    ["デザート","食事の後に食べる甘い物のこと"],
+    ["スイーツ","甘い菓子のこと"],
+    ["トッピング","料理の上に載せる具のこと"],
+    ["シェフ","西洋料理の料理長のこと"],
+    ["レシピ","料理の材料と作り方を記した覚え書きのこと"],
+    ["インテリア","室内の飾り付けや家具のこと"],
+    ["リフォーム","住まいを直して作り替える改修のこと"],
+    ["ガーデニング","草花を育てる庭いじりのこと"],
+    ["ミニマリスト","持ち物を極力減らして暮らす人のこと"],
+    ["レイアウト","物や紙面の配置のこと"],
+    ["コーディネート","服や物の組み合わせを整えること"],
+    ["トレンド","世の中の流行のこと"],
+    ["ヴィンテージ","古いが値打ちのある年代物のこと"],
+    ["カジュアル","気楽でくだけた装いのこと"],
+    ["フォーマル","儀式向けの正装のこと"],
+    ["ハプニング","思いがけず起きる出来事のこと"],
+    ["アクシデント","不慮の出来事や事故のこと"],
+    ["ラッキー","運が良いこと"],
+    ["チャンス","逃してはならない好機のこと"],
+    ["タイミング","事を起こすのに良い頃合いのこと"],
+    ["モーニング","朝のこと。喫茶店の朝の定食を指すことも"],
+    ["ブランチ","朝と昼を兼ねた遅めの食事のこと"],
+    ["カフェ","珈琲などを出す喫茶の店のこと"],
+    ["スープ","西洋風の汁物のこと"],
+    ["サラダ","生野菜の和え物のこと"],
+    ["ドレッシング","生野菜にかける調味の汁のこと"],
+    ["ソース","料理にかける調味の汁のこと"],
+    ["スパイス","香辛料のこと"],
+    ["ハーブ","香りの良い草のこと"],
+    ["オーガニック","農薬などに頼らない有機栽培のこと"],
+    ["グルメ","食通のこと。うまい食べ物の意味でも使う"],
+    ["リーズナブル","値段が手頃なこと"],
+    ["セール","安売りのこと"],
+    ["バーゲン","大安売りのこと"],
+    ["クーポン","割引の券のこと"],
+    ["ポイント","買い物で貯まる点数のこと"],
+    ["キャッシュレス","現金を使わずに支払うこと"],
+    ["レシート","買い物の受け取り証のこと"],
+    ["レジ","店の勘定場のこと"],
+    ["ショッピング","買い物のこと"],
+    ["ウィンドウショッピング","買わずに眺めて歩く買い物のこと"],
+    ["オーダーメイド","注文に応じて誂えること"],
+    ["ハンドメイド","手作りのこと"],
+    ["リサイクル","資源として再び生かすこと"],
+    ["リユース","捨てずに繰り返し使うこと"],
+    ["エコ","環境に優しいこと"],
+    ["サイズ","大きさのこと"],
+    ["デザイン","見た目の設計や意匠のこと"],
+    ["カラー","色のこと"],
+    ["シンプル","飾り気がなく簡素なこと"],
+    ["ナチュラル","自然のままであること"],
+    ["モダン","今風であること"],
+    ["レトロ","昔を懐かしむ趣のこと"],
+    ["アンティーク","古くて値打ちのある家具や道具のこと"],
+    ["ブランド","名の通った銘柄のこと"],
+    ["アクセサリー","身を飾る装身具のこと"],
+    ["ネックレス","首飾りのこと"],
+    ["ピアス","耳に穴を開けて着ける飾りのこと"],
+    ["リング","指輪のこと"],
+    ["バッグ","鞄のこと"],
+    ["リュック","背負う型の鞄のこと"],
+    ["ポケット","服に付いた物入れのこと"],
+    ["ファスナー","布地を噛み合わせて閉じる留め具のこと"],
+    ["ボタン","服を留める小さな留め具のこと"],
+    ["ヘアスタイル","髪型のこと"],
+    ["パーマ","髪にうねりをつける施術のこと"],
+    ["カット","髪を切ること"],
+    ["シャンプー","髪を洗うための洗剤のこと"],
+    ["エステ","肌や体を美しく整える施術のこと"],
+    ["ネイル","爪の飾りや手入れのこと"],
+    ["メイク","化粧のこと"],
+    ["スキンケア","肌の手入れのこと"],
+    ["アロマ","良い香りで心身を癒すこと"],
+    ["マッサージ","体を揉みほぐすこと"],
+    ["サウナ","高温で汗をかく蒸し風呂のこと"],
+    ["スパ","湯浴みでくつろぐ施設のこと"],
+    ["ホテル","西洋式の宿のこと"],
+    ["チェックイン","宿に入るときの手続きのこと"],
+    ["チェックアウト","宿を出るときの手続きのこと"],
+    ["ツアー","旅の企画のこと"],
+    ["ガイド","旅先などの案内人のこと"],
+    ["パスポート","国の外へ出るための旅券のこと"],
+    ["ビザ","よその国へ入る許可証のこと"],
+    ["スーツケース","旅の荷物を入れる硬い鞄のこと"],
+    ["キャンプ","野外で寝泊まりして楽しむ遊びのこと"],
+    ["バーベキュー","野外で肉などを焼いて食べる集いのこと"],
+    ["ピクニック","弁当を持って野へ遊びに行くこと"],
+    ["ハイキング","野山を歩いて楽しむ遊びのこと"],
+    ["サイクリング","自転車で走って楽しむ遊びのこと"],
+    ["ドライブ","車で走ることそのものを楽しむこと"],
+    ["ガソリンスタンド","車の燃料を入れる店のこと"],
+    ["パーキング","車を停めておく場所のこと"],
+    ["ラッシュアワー","通勤で混み合う時間帯のこと"],
+    ["タクシー","客を乗せて走る貸し切りの車のこと"],
+    ["チケット","切符や入場の券のこと"],
+    ["コンサート","音楽の演奏会のこと"],
+    ["ライブ","目の前で行われる生の演奏会のこと"],
+    ["ミュージカル","歌と踊りで進む芝居のこと"],
+    ["ドラマ","続き物の芝居のこと"],
+    ["アニメ","動く絵で作られた作品のこと"],
+    ["キャラクター","物語に出てくる登場人物のこと"],
+    ["ヒーロー","皆を救う英雄のこと"],
+    ["ファン","熱心な愛好者のこと"],
+    ["グッズ","作品などにちなんだ品物のこと"],
+    ["パズル","頭を使う組み合わせの遊びのこと"],
+    ["クイズ","問いを出して当てさせる遊びのこと"],
+    ["ジム","体を鍛えるための施設のこと"],
+    ["ヨガ","天竺伝来の、呼吸と姿勢を整える鍛錬のこと"],
+    ["ウォーキング","健康のために歩くこと"],
+    ["ペット","飼って可愛がる動物のこと"]
+  ]
+};
+/* 漢数字(1〜99) */
+function kanjiNum(n){
+  const d = "〇一二三四五六七八九";
+  if(n < 10) return d[n];
+  if(n < 20) return "十" + (n%10 ? d[n%10] : "");
+  if(n < 100) return d[Math.floor(n/10)] + "十" + (n%10 ? d[n%10] : "");
+  return String(n);
+}
+/* 横文字の判定(カタカナ・半角カナ・半角/全角英字) */
+const YOKOMOJI = /[ァ-ヺーｦ-ﾟA-Za-zＡ-Ｚａ-ｚ]/;
+
+/* ================= 状態 ================= */
+let genre = "business";
+let timeLimit = 60;
+let deck = [];
+let round = 0;
+let score = 0;
+let roundLog = [];   // {word, result: 'ok'|'pass'|'out'|'miss'}
+let currentWord = "";
+let timeLeft = 0;
+let deadline = 0;
+let timerId = null;
+let roundOpen = false;
+let reiSeen = false;   // 表示中のお題で手本を開いたか
+
+/* ================= 画面遷移 ================= */
+const $ = id => document.getElementById(id);
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+}
+
+/* ================= 設定チップ ================= */
+function bindChips(containerId, attr, cb){
+  $(containerId).addEventListener("click", e=>{
+    const btn = e.target.closest(".chip");
+    if(!btn) return;
+    $(containerId).querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+    btn.classList.add("on");
+    cb(btn.dataset[attr]);
+  });
+}
+bindChips("genre-chips","genre", v=>{ genre=v; $("start-msg").textContent=""; });
+bindChips("time-chips","time", v=>timeLimit=parseInt(v,10));
+
+/* ================= 山札 ================= */
+/* 出題済みの語と、その出た順番。未出題を優先し、出題済みは古いものから出す */
+const seenOrder = new Map();
+let seenCounter = 0;
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function currentPool(){
+  return genre==="mix"
+    ? [...WORDS.business, ...WORDS.it, ...WORDS.daily]
+    : [...WORDS[genre]];
+}
+function buildDeck(){
+  const pool = currentPool();
+  const fresh = shuffle(pool.filter(([w])=>!seenOrder.has(w)));
+  // 出題済みは「最近出たもの」を前(=後で引かれる)に、「昔出たもの」を後ろに
+  const seen = pool.filter(([w])=>seenOrder.has(w))
+                   .sort((a,b)=>seenOrder.get(b[0]) - seenOrder.get(a[0]));
+  // 末尾から引くので、未出題を一番後ろ=最優先に置く
+  deck = seen.concat(fresh);
+}
+function fitOdai(word){
+  const el = $("odai-text");
+  el.classList.toggle("long",  word.length >= 7 && word.length < 10);
+  el.classList.toggle("xlong", word.length >= 10);
+}
+function drawWord(){
+  if(deck.length===0) buildDeck();
+  if(deck.length===0){ currentWord = ""; return false; }
+  const [word, rei] = deck.pop();
+  currentWord = word;
+  reiSeen = false;
+  seenOrder.set(word, ++seenCounter);
+  $("odai-text").textContent = word;
+  fitOdai(word);
+  $("odai-hint").textContent = "この言葉も、英語も、カタカナ語も口にしてはならぬ";
+  const reiBox = $("odai-rei");
+  reiBox.textContent = "";
+  const label = document.createElement("div");
+  label.className = "rei-label";
+  label.textContent = "説明の手本";
+  reiBox.append(label, document.createTextNode(rei));
+  reiBox.hidden = true;
+  $("btn-rei").textContent = "手本を見る";
+  // 新しいお触書を貼り出す
+  const card = $("ofuda");
+  card.classList.remove("stamped", "enter");
+  $("stamp").className = "seal stamp";
+  void card.offsetWidth;
+  card.classList.add("enter");
+  return true;
+}
+
+/* ================= 判子 ================= */
+const REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+const STAMP_MS = REDUCED ? 150 : 520;
+const STAMP_TEXT = {ok:"当", pass:"見送", out:"御用"};
+function showStamp(result){
+  const st = $("stamp");
+  st.textContent = STAMP_TEXT[result];
+  st.className = "seal stamp " + result;
+  void st.offsetWidth;
+  st.classList.add("show");
+  $("ofuda").classList.add("stamped");
+  if(navigator.vibrate){ try{ navigator.vibrate(result==="out" ? [30,40,30] : 20); }catch(e){} }
+}
+function bumpScore(){
+  const b = $("play-score");
+  b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump");
+}
+$("btn-rei").addEventListener("click", ()=>{
+  const rei = $("odai-rei");
+  rei.hidden = !rei.hidden;
+  if(!rei.hidden) reiSeen = true;   // 一度でも開いたら「見た」
+  $("btn-rei").textContent = rei.hidden ? "手本を見る" : "手本を隠す";
+});
+
+/* ================= 画面を消灯させない(対応端末のみ) ================= */
+let wakeLock = null;
+async function keepAwake(){
+  try{
+    if("wakeLock" in navigator && !wakeLock){
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", ()=>{ wakeLock = null; });
+    }
+  }catch(e){ wakeLock = null; }
+}
+function letSleep(){
+  try{ if(wakeLock){ wakeLock.release(); } }catch(e){}
+  wakeLock = null;
+}
+
+/* ================= タイマー ================= */
+/* 終了時刻から残りを計算するので、画面を離れても時間がずれない */
+function startTimer(){
+  stopTimer();
+  const fill = $("timer-fill");
+  fill.classList.add("noanim");
+  fill.style.width = "100%";
+  void fill.offsetWidth;          // 一気に満タンへ戻す
+  fill.classList.remove("noanim");
+  $("timerbar").classList.remove("warn");
+  if(timeLimit===0){
+    $("timer-num").textContent = "∞";
+    $("timer-num").classList.remove("warn");
+    return;
+  }
+  deadline = Date.now() + timeLimit*1000;
+  tick();
+  timerId = setInterval(tick, 250);
+}
+function tick(){
+  if(!roundOpen || timeLimit===0) return;
+  timeLeft = Math.max(0, Math.ceil((deadline - Date.now())/1000));
+  renderTimer();
+  if(timeLeft<=0) endRound("timeup");
+}
+function renderTimer(){
+  $("timer-num").textContent = timeLeft;
+  $("timer-num").classList.toggle("warn", timeLeft<=10);
+  $("timerbar").classList.toggle("warn", timeLeft<=10);
+  $("timer-fill").style.width = (timeLeft/timeLimit*100)+"%";
+}
+function stopTimer(){ if(timerId){clearInterval(timerId); timerId=null;} }
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState==="visible" && roundOpen){ tick(); keepAwake(); }
+});
+
+/* ================= ラウンド進行 ================= */
+function gotoGate(){
+  $("gate-round").textContent = "第" + kanjiNum(round+1) + "幕";
+  $("fuusho").classList.remove("opening");
+  $("btn-reveal").disabled = false;
+  show("scr-gate");
+}
+function openSeal(){
+  if($("btn-reveal").disabled) return;
+  $("btn-reveal").disabled = true;
+  $("fuusho").classList.add("opening");
+  setTimeout(startRound, REDUCED ? 0 : 380);
+}
+function startRound(){
+  score = 0;
+  roundLog = [];
+  $("play-score").textContent = "0";
+  if(!drawWord()){
+    $("start-msg").textContent = "このお題の種類には一題もない。問題集で書き足すべし";
+    show("scr-home");
+    return;
+  }
+  roundOpen = true;
+  show("scr-play");
+  startTimer();
+  keepAwake();
+}
+let stamping = false;
+function record(result){
+  if(!roundOpen || stamping || !currentWord) return;
+  roundLog.push({word: currentWord, result, rei: reiSeen});
+  currentWord = "";               // 判子を押した札は決着済み
+  if(result==="ok"){ score++; $("play-score").textContent = score; bumpScore(); }
+  stamping = true;
+  showStamp(result);
+  setTimeout(()=>{
+    stamping = false;
+    if(roundOpen) drawWord();
+  }, STAMP_MS);
+}
+function rankOf(s){
+  if(s >= 12) return "横文字奉行";
+  if(s >= 9)  return "大番頭";
+  if(s >= 6)  return "番頭";
+  if(s >= 3)  return "手代";
+  if(s >= 1)  return "丁稚";
+  return "見習い";
+}
+function endRound(reason){
+  if(!roundOpen) return;
+  roundOpen = false;
+  stopTimer();
+  letSleep();
+  // 決着がつかないまま終わったお題も一覧に残す
+  if(currentWord) roundLog.push({word: currentWord, result: reason==="timeup" ? "miss" : "stop", rei: reiSeen});
+  $("result-round").textContent = "第" + kanjiNum(round+1) + "幕 仕舞";
+  $("result-score").textContent = score;
+  const list = $("result-list");
+  list.textContent = "";
+  const LABEL = {ok:"当たり", pass:"見送り", out:"御用", miss:"時切れ", stop:"途中"};
+  const CLS   = {ok:"ok",     pass:"pass",   out:"out",  miss:"pass",   stop:"pass"};
+  for(const h of roundLog){
+    const row = document.createElement("div");
+    row.className = "row";
+    const name = document.createElement("span");
+    name.className = "row-word";
+    name.textContent = h.word;
+    const marks = document.createElement("span");
+    marks.className = "row-marks";
+    const reiTag = document.createElement("span");
+    reiTag.className = "rei-tag " + (h.rei ? "seen" : "unseen");
+    reiTag.textContent = h.rei ? "手本を見た" : "手本なし";
+    const mark = document.createElement("span");
+    mark.className = "mark " + CLS[h.result];
+    mark.textContent = LABEL[h.result];
+    marks.append(reiTag, mark);
+    row.append(name, marks);
+    list.appendChild(row);
+  }
+  // 称号と内訳
+  const rank = $("result-rank");
+  rank.textContent = rankOf(score);
+  rank.classList.remove("show"); void rank.offsetWidth; rank.classList.add("show");
+  const count = r => roundLog.filter(h=>h.result===r).length;
+  const tally = $("result-tally");
+  tally.textContent = "";
+  const reiCount = roundLog.filter(h=>h.rei).length;
+  for(const [label, n] of [["当たり",count("ok")],["見送り",count("pass")],["御用",count("out")],["手本を見た",reiCount]]){
+    const span = document.createElement("span");
+    span.append(label);
+    const b = document.createElement("b"); b.textContent = n;
+    span.append(b);
+    tally.append(span);
+  }
+  round++;
+  show("scr-result");
+}
+
+/* ================= ボタン ================= */
+$("btn-start").addEventListener("click", ()=>{
+  $("start-msg").textContent = "";
+  if(currentPool().length===0){
+    $("start-msg").textContent = "このお題の種類には一題もない。問題集で書き足すべし";
+    return;
+  }
+  buildDeck();
+  round = 0;
+  gotoGate();
+});
+$("btn-reveal").addEventListener("click", openSeal);
+$("btn-quit").addEventListener("click", ()=>show("scr-home"));
+$("btn-ok").addEventListener("click", ()=>record("ok"));
+$("btn-pass").addEventListener("click", ()=>record("pass"));
+$("btn-out").addEventListener("click", ()=>record("out"));
+$("btn-finish").addEventListener("click", ()=>endRound("stop"));
+$("btn-next-round").addEventListener("click", ()=>{ buildDeck(); gotoGate(); });
+$("btn-home").addEventListener("click", ()=>show("scr-home"));
+
+/* ================= 問題集一覧 ================= */
+let listGenre = "business";
+const GENRE_NAMES = {business:"仕事の言葉", it:"情報の言葉", daily:"日々の言葉"};
+
+function renderList(){
+  const words = WORDS[listGenre];
+  $("list-count").textContent = GENRE_NAMES[listGenre] + " 全" + words.length + "題";
+  const box = $("word-list");
+  box.textContent = "";
+  words.forEach(([w,r], i)=>{
+    const row = document.createElement("div");
+    row.className = "wrow";
+    const body = document.createElement("div"); body.className = "wbody";
+    const name = document.createElement("div"); name.className = "wname"; name.textContent = w;
+    const rei  = document.createElement("div"); rei.className  = "wrei";  rei.textContent  = r;
+    body.append(name, rei);
+    const del = document.createElement("button");
+    del.className = "wdel"; del.dataset.i = i; del.textContent = "消す";
+    row.append(body, del);
+    box.appendChild(row);
+  });
+}
+bindChips("list-chips","lg", v=>{ listGenre=v; $("add-msg").textContent=""; renderList(); });
+
+$("word-list").addEventListener("click", e=>{
+  const btn = e.target.closest(".wdel");
+  if(!btn) return;
+  WORDS[listGenre].splice(parseInt(btn.dataset.i,10), 1);
+  renderList();
+});
+
+$("btn-add").addEventListener("click", ()=>{
+  const w = $("add-word").value.trim();
+  const r = $("add-rei").value.trim();
+  const msg = $("add-msg");
+  msg.textContent = "";
+  if(!w || !r){ msg.textContent = "お題と手本の両方を書き入れるべし"; return; }
+  if(YOKOMOJI.test(r)){ msg.textContent = "手本に横文字が混じっておる。言い換えるべし"; return; }
+  for(const g of ["business","it","daily"]){
+    if(WORDS[g].some(([x])=>x===w)){
+      msg.textContent = "そのお題は「" + GENRE_NAMES[g] + "」に既にある"; return;
+    }
+  }
+  WORDS[listGenre].push([w, r]);
+  $("add-word").value = ""; $("add-rei").value = "";
+  renderList();
+  $("word-list").scrollTop = $("word-list").scrollHeight;
+});
+
+$("btn-export").addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(WORDS, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "yokomoji-odai.json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  // すぐ破棄すると端末によっては保存に失敗するので少し待つ
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+});
+
+function applyImport(text){
+  const msg = $("add-msg");
+  try{
+    const data = JSON.parse(text);
+    for(const g of ["business","it","daily"]){
+      if(!Array.isArray(data[g]) || !data[g].every(p=>Array.isArray(p) && typeof p[0]==="string" && typeof p[1]==="string")){
+        throw new Error("形式が違う");
+      }
+    }
+    WORDS.business = data.business;
+    WORDS.it = data.it;
+    WORDS.daily = data.daily;
+    renderList();
+    const total = WORDS.business.length + WORDS.it.length + WORDS.daily.length;
+    msg.textContent = "帳面を読み込んだ(全" + total + "題)";
+  }catch(err){
+    msg.textContent = "帳面の形式が読めぬ。書き出した書類をそのまま使うべし";
+  }
+}
+$("file-import").addEventListener("change", e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{ applyImport(reader.result); e.target.value = ""; };
+  reader.readAsText(file);
+});
+
+$("btn-list").addEventListener("click", ()=>{ $("add-msg").textContent=""; renderList(); show("scr-list"); });
+$("btn-list-back").addEventListener("click", ()=>show("scr-home"));
+</script>
+</body>
+</html>
