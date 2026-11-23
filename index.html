@@ -83,6 +83,12 @@ body{
   padding:20px 16px calc(20px + env(safe-area-inset-bottom));
 }
 .app{width:100%;max-width:420px;}
+/* 作品一覧(TOPページ)に戻るボタン */
+.back-nav{margin:0 0 12px;}
+.back-to-list{display:inline-flex;align-items:center;padding:4px 12px;border:1px solid var(--line-weak);border-radius:999px;
+  font-family:var(--gothic);font-size:12.5px;line-height:1.5;color:var(--fg-weak);text-decoration:none;transition:color .15s,border-color .15s;}
+.back-to-list:hover{color:var(--fg);border-color:var(--line);}
+.back-to-list:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .screen{display:none;animation:fadein .3s ease;}
 .screen.active{display:block;}
 @keyframes fadein{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
@@ -487,6 +493,7 @@ h1.title .title-col + .title-col{margin-right:6px;}
 </head>
 <body>
 <div class="app">
+  <nav class="back-nav"><a class="back-to-list" href="https://yume-towa.github.io/">一覧に戻る</a></nav>
 
   <!-- ホーム -->
   <section class="screen active" id="scr-home">
